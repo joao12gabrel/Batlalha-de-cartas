@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Batle of Cards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(0, 255, 255, 0.1) 0%, transparent 70%);
+            animation: pulse 10s infinite alternate;
+            z-index: -1;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.3; }
+            100% { transform: scale(1.2); opacity: 0.1; }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background: rgba(10, 10, 10, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+            width: 100%;
+        }
+
+        .timer {
+            color: #00ffff;
+            font-size: 28px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 5px 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .historico {
+            max-width: 350px;
+            padding: 5px;
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            direction: rtl;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: thin;
+            scrollbar-color: #00ffff #1a1a1a;
+        }
+
+        .historico::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .historico::-webkit-scrollbar-thumb {
+            background: #00ffff;
+            border-radius: 4px;
+        }
+
+        .historico::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .historico div {
+            padding: 5px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            min-width: 30px;
+            text-align: center;
+            font-size: 14px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
+            transition: transform 0.3s;
+            color: #fff;
+        }
+
+        .historico .h {
+            background: linear-gradient(45deg, #0000ff, #1e90ff);
+        }
+
+        .historico .a {
+            background: linear-gradient(45deg, #ff0000, #ff4500);
+        }
+
+        .historico .d {
+            background: linear-gradient(45deg, #ffa500, #ff4500);
+        }
+
+        .historico div:hover {
+            transform: scale(1.1);
+        }
+
+        .cartas {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .carta-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .carta-label {
+            color: #00ffff;
+            font-size: 20px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+            font-weight: bold;
+        }
+
+        .carta {
+            width: 71px;
+            height: 96px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: transform 0.5s ease-in-out;
+            transform-style: preserve-3d;
+        }
+
+        .carta.flip {
+            transform: rotateY(180deg);
+        }
+
+        .aposta-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: nowrap;
+        }
+
+        .bet-option {
+            font-weight: bold;
+            color: #00ffff;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #1a1a1a, #333);
+            border: 4px solid #00ffff;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+        }
+
+        .bet-option:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+            border: 4px solid #00ffff;
+        }
+
+        .aposta-value {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            font-size: 12px;
+            color: #ffffff;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.7);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chip-menu {
+            position: relative;
+            margin: 0 20px;
+        }
+
+        .chip-button {
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #ffffff, #d3d3d3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000000;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 2px solid #FFD700;
+        }
+
+        .chip-button:hover {
+            transform: scale(1.1);
+        }
+
+        .chip-dropdown {
+            display: none;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            z-index: 10;
+            flex-direction: row;
+            gap: 5px;
+            animation: slideRight 0.3s ease-out forwards;
+        }
+
+        .chip-menu:hover .chip-dropdown {
+            display: flex;
+        }
+
+        @keyframes slideRight {
+            from {
+                transform: translateX(-50%) scaleX(0);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) scaleX(1);
+                opacity: 1;
+            }
+        }
+
+        .chip {
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, #ffffff, #d3d3d3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000000;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 2px solid #FFD700;
+        }
+
+        .chip:hover, .chip.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+        }
+
+        .action-button {
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #00ffff, #00b7b7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a1a1a;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.7);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .action-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 1);
+        }
+
+        .footer {
+            width: 100%;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .footer div {
+            margin: 5px 0;
+            font-size: 18px;
+            text-transform: uppercase;
+        }
+
+        .footer div:first-child {
+            color: #00ffff;
+            font-weight: bold;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: #00ffff;
+            font-size: 40px;
+            padding: 20px 40px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            display: none;
+            z-index: 100;
+            text-align: center;
+        }
+
+        .no-balance-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: #00ffff;
+            font-size: 40px;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            display: none;
+            z-index: 100;
+            text-align: center;
+        }
+
+        .reload-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: linear-gradient(145deg, #00ffff, #00b7b7);
+            border: none;
+            border-radius: 10px;
+            color: #1a1a1a;
+            font-size: 20px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .reload-button:hover {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 480px) {
+            .game-area {
+                padding: 10px;
+            }
+            .timer {
+                font-size: 20px;
+            }
+            .historico div {
+                font-size: 12px;
+                min-width: 25px;
+            }
+            .carta-label {
+                font-size: 16px;
+            }
+            .bet-option {
+                width: 80px;
+                height: 80px;
+                font-size: 14px;
+            }
+            .aposta-value {
+                font-size: 10px;
+            }
+            .chip-button, .action-button {
+                width: 50px;
+                height: 50px;
+                font-size: 16px;
+            }
+            .chip {
+                width: 35px;
+                height: 35px;
+                font-size: 12px;
+            }
+            .footer div {
+                font-size: 14px;
+            }
+            .action-buttons {
+                gap: 5px;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="game-area">
+            <div id="timer" class="timer">15</div>
+            <div class="historico" id="historico"></div>
+
+            <div class="cartas">
+                <div class="carta-container">
+                    <span class="carta-label">AWAY</span>
+                    <div id="carta-jogador" class="carta" style="background-image: url('https://deckofcardsapi.com/static/img/back.png');"></div>
+                </div>
+                <div class="carta-container">
+                    <span class="carta-label">HOME</span>
+                    <div id="carta-casa" class="carta" style="background-image: url('https://deckofcardsapi.com/static/img/back.png');"></div>
+                </div>
+            </div>
+
+            <div class="aposta-area">
+                <div id="slot-jogador" class="bet-option">AWAY<span class="aposta-value">0</span></div>
+                <div id="slot-empate" class="bet-option">DRAW<span class="aposta-value">0</span></div>
+                <div id="slot-casa" class="bet-option">HOME<span class="aposta-value">0</span></div>
+            </div>
+
+            <div class="action-buttons">
+                <div id="repeat-bet" class="action-button">🔁</div>
+                <div class="chip-menu">
+                    <div class="chip-button">BET</div>
+                    <div class="chip-dropdown" id="chip-dropdown">
+                        <div class="chip" data-value="5">5</div>
+                        <div class="chip" data-value="10">10</div>
+                        <div class="chip" data-value="25">25</div>
+                        <div class="chip" data-value="50">50</div>
+                        <div class="chip" data-value="100">100</div>
+                    </div>
+                </div>
+                <div id="double-bet" class="action-button">×2</div>
+            </div>
+
+            <div class="footer">
+                <div id="saldo">Saldo: 1000 €</div>
+                <div>Batle Of Cards: €5 – 5000</div>
+            </div>
+        </div>
+
+        <div id="win-alert" class="overlay"></div>
+        <div id="no-balance" class="no-balance-overlay">
+            Saldo Insuficiente!
+            <button class="reload-button" onclick="recarregarSaldo()">Carregar Saldo</button>
+        </div>
+
+        <!-- Áudio de fundo -->
+        <audio id="background-music" loop>
+            <source src="https://www.bensound.com/bensound-music/bensound-jazz.mp3" type="audio/mp3">
+        </audio>
+
+        <!-- Áudio de aplausos -->
+        <audio id="applause-sound">
+            <source src="https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-17906/zapsplat_human_crowd_cheer_applause_short_01_19441.mp3" type="audio/mp3">
+        </audio>
+    </div>
+
+    <script>
+        const naipes = ["S", "H", "C", "D"];
+        const valores = ["2", "3", "4", "5", "6", "7", "8", "9", "0", "J", "Q", "K", "A"];
+        const baralho = valores.flatMap(valor => naipes.map(naipe => valor + naipe));
+
+        const saldoEl = document.getElementById("saldo");
+        const historicoEl = document.getElementById("historico");
+        const cartaJogadorEl = document.getElementById("carta-jogador");
+        const cartaCasaEl = document.getElementById("carta-casa");
+        const slotJogador = document.getElementById("slot-jogador");
+        const slotEmpate = document.getElementById("slot-empate");
+        const slotCasa = document.getElementById("slot-casa");
+        const chipDropdown = document.getElementById("chip-dropdown");
+        const repeatBetBtn = document.getElementById("repeat-bet");
+        const doubleBetBtn = document.getElementById("double-bet");
+        const timerEl = document.getElementById("timer");
+        const winAlert = document.getElementById("win-alert");
+        const noBalanceAlert = document.getElementById("no-balance");
+        const backgroundMusic = document.getElementById("background-music");
+        const applauseSound = document.getElementById("applause-sound");
+
+        let saldo = 1000;
+        let historico = [];
+        let apostas = { jogador: 0, casa: 0, empate: 0 };
+        let ultimaAposta = { jogador: 0, casa: 0, empate: 0 };
+        let apostasAtivas = false;
+        let timer = null;
+        let selectedChipValue = null;
+        let jogoComecou = false;
+        let serverSeed = "initial-seed-" + Date.now();
+
+        // Toca música de fundo ao carregar
+        backgroundMusic.volume = 0.2;
+        backgroundMusic.play().catch(() => console.log("Erro ao tocar música de fundo. Verifique a URL ou use um arquivo local."));
+
+        function generateHash(seed, nonce) {
+            let combined = seed + "-" + nonce;
+            let hash = 0;
+            for (let i = 0; i < combined.length; i++) {
+                hash = ((hash << 5) - hash) + combined.charCodeAt(i);
+                hash |= 0;
+            }
+            return Math.abs(hash);
+        }
+
+        function shuffleDeck(seed, nonce) {
+            const hash = generateHash(seed, nonce);
+            let deck = [...baralho];
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = (hash + i) % (i + 1);
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            return deck;
+        }
+
+        function valorCarta(carta) {
+            const valor = carta.slice(0, -1);
+            return valores.indexOf(valor === "0" ? "10" : valor) + 2;
+        }
+
+        function atualizarHistorico(resultado) {
+            jogoComecou = true;
+            historico.push(resultado);
+            if (historico.length > 7) historico.shift();
+            historicoEl.innerHTML = "";
+            historico.forEach(item => {
+                const div = document.createElement("div");
+                div.textContent = item === "Jogador" ? "A" : item === "Casa" ? "H" : "D";
+                div.className = item === "Jogador" ? "a" : item === "Casa" ? "h" : "d";
+                historicoEl.appendChild(div);
+            });
+        }
+
+        function resetarApostas() {
+            ultimaAposta = { ...apostas };
+            apostas = { jogador: 0, casa: 0, empate: 0 };
+            slotJogador.innerHTML = `AWAY<span class="aposta-value">0</span>`;
+            slotEmpate.innerHTML = `DRAW<span class="aposta-value">0</span>`;
+            slotCasa.innerHTML = `HOME<span class="aposta-value">0</span>`;
+            cartaJogadorEl.style.backgroundImage = "url('https://deckofcardsapi.com/static/img/back.png')";
+            cartaCasaEl.style.backgroundImage = "url('https://deckofcardsapi.com/static/img/back.png')";
+            apostasAtivas = false;
+            selectedChipValue = null;
+            document.querySelectorAll(".chip").forEach(chip => chip.classList.remove("selected"));
+            iniciarRodada();
+        }
+
+        function jogar() {
+            const totalAposta = apostas.jogador + apostas.casa + apostas.empate;
+            if (totalAposta > saldo) {
+                verificarSaldo();
+                return;
+            }
+
+            const nonce = Date.now();
+            const baralhoEmbaralhado = shuffleDeck(serverSeed, nonce);
+            const cartaJogador = baralhoEmbaralhado[0];
+            const cartaCasa = baralhoEmbaralhado[1];
+
+            cartaJogadorEl.classList.add("flip");
+            cartaCasaEl.classList.add("flip");
+            setTimeout(() => {
+                cartaJogadorEl.style.backgroundImage = `url('https://deckofcardsapi.com/static/img/${cartaJogador}.png')`;
+                cartaCasaEl.style.backgroundImage = `url('https://deckofcardsapi.com/static/img/${cartaCasa}.png')`;
+                cartaJogadorEl.classList.remove("flip");
+                cartaCasaEl.classList.remove("flip");
+
+                const vJogador = valorCarta(cartaJogador);
+                const vCasa = valorCarta(cartaCasa);
+                const resultado = vJogador === vCasa ? "Empate" : vJogador > vCasa ? "Jogador" : "Casa";
+
+                let ganhos = 0;
+                if (resultado === "Jogador" && apostas.jogador > 0) ganhos += apostas.jogador * 2;
+                if (resultado === "Casa" && apostas.casa > 0) ganhos += apostas.casa * 2;
+                if (resultado === "Empate" && apostas.empate > 0) ganhos += apostas.empate * 11;
+
+                if (ganhos > 0) {
+                    saldo = saldo - totalAposta + ganhos;
+                    winAlert.textContent = `Você Ganhou: ${ganhos - totalAposta} €`;
+                    winAlert.style.display = "block";
+                    applauseSound.play().catch(() => console.log("Erro ao tocar aplausos. Verifique a URL ou use um arquivo local."));
+                    setTimeout(() => winAlert.style.display = "none", 2000);
+                } else {
+                    saldo -= totalAposta;
+                }
+
+                saldoEl.textContent = `Saldo: ${saldo} €`;
+                atualizarHistorico(resultado);
+                verificarSaldo();
+
+                serverSeed = generateHash(serverSeed, nonce).toString();
+                setTimeout(resetarApostas, 3000);
+            }, 600);
+        }
+
+        function verificarSaldo() {
+            if (saldo <= 0) {
+                noBalanceAlert.style.display = "block";
+                apostasAtivas = false;
+                clearInterval(timer);
+            }
+        }
+
+        function recarregarSaldo() {
+            saldo = 1000;
+            saldoEl.textContent = `Saldo: ${saldo} €`;
+            noBalanceAlert.style.display = "none";
+            resetarApostas();
+        }
+
+        function iniciarRodada() {
+            if (timer) clearInterval(timer);
+            apostasAtivas = true;
+            let tempoRestante = 15;
+            timerEl.textContent = tempoRestante;
+            timer = setInterval(() => {
+                tempoRestante--;
+                timerEl.textContent = tempoRestante;
+                if (tempoRestante <= 0) {
+                    clearInterval(timer);
+                    timer = null;
+                    apostasAtivas = false;
+                    jogar();
+                }
+            }, 1000);
+        }
+
+        function adicionarAposta(slot, valor) {
+            if (!apostasAtivas || !valor) return;
+            const totalAposta = apostas.jogador + apostas.casa + apostas.empate + valor;
+            if (totalAposta > saldo) return;
+
+            if (slot === slotJogador && apostas.jogador + valor <= 5000) {
+                apostas.jogador += valor;
+                slotJogador.innerHTML = `AWAY<span class="aposta-value">${apostas.jogador}</span>`;
+            } else if (slot === slotEmpate && apostas.empate + valor <= 5000) {
+                apostas.empate += valor;
+                slotEmpate.innerHTML = `DRAW<span class="aposta-value">${apostas.empate}</span>`;
+            } else if (slot === slotCasa && apostas.casa + valor <= 5000) {
+                apostas.casa += valor;
+                slotCasa.innerHTML = `HOME<span class="aposta-value">${apostas.casa}</span>`;
+            }
+        }
+
+        chipDropdown.querySelectorAll(".chip").forEach(chip => {
+            chip.addEventListener("click", () => {
+                if (!apostasAtivas) return;
+                chipDropdown.querySelectorAll(".chip").forEach(c => c.classList.remove("selected"));
+                chip.classList.add("selected");
+                selectedChipValue = parseInt(chip.dataset.value);
+            });
+        });
+
+        [slotJogador, slotEmpate, slotCasa].forEach(slot => {
+            slot.addEventListener("click", (e) => {
+                e.preventDefault();
+                if (selectedChipValue) adicionarAposta(slot, selectedChipValue);
+            });
+        });
+
+        repeatBetBtn.addEventListener("click", () => {
+            if (!apostasAtivas) return;
+            const totalUltimaAposta = ultimaAposta.jogador + ultimaAposta.casa + ultimaAposta.empate;
+            if (totalUltimaAposta > saldo) return;
+
+            apostas = { ...ultimaAposta };
+            slotJogador.innerHTML = `AWAY<span class="aposta-value">${apostas.jogador}</span>`;
+            slotEmpate.innerHTML = `DRAW<span class="aposta-value">${apostas.empate}</span>`;
+            slotCasa.innerHTML = `HOME<span class="aposta-value">${apostas.casa}</span>`;
+        });
+
+        doubleBetBtn.addEventListener("click", () => {
+            if (!apostasAtivas) return;
+            const doubled = {
+                jogador: Math.min(apostas.jogador * 2, 5000),
+                casa: Math.min(apostas.casa * 2, 5000),
+                empate: Math.min(apostas.empate * 2, 5000)
+            };
+            const totalDoubled = doubled.jogador + doubled.casa + doubled.empate;
+            if (totalDoubled > saldo) return;
+
+            apostas = doubled;
+            slotJogador.innerHTML = `AWAY<span class="aposta-value">${apostas.jogador}</span>`;
+            slotEmpate.innerHTML = `DRAW<span class="aposta-value">${apostas.empate}</span>`;
+            slotCasa.innerHTML = `HOME<span class="aposta-value">${apostas.casa}</span>`;
+        });
+
+        window.addEventListener("load", () => {
+            iniciarRodada();
+        });
+    </script>
+</body>
+</html>
